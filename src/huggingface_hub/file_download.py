@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from functools import partial
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, BinaryIO, Dict, Generator, Optional, Tuple, Union
+from typing import Any, BinaryIO, Dict, Generator, Optional, Tuple, Union, Callable
 from urllib.parse import quote, urlparse
 
 import requests
@@ -467,6 +467,7 @@ def http_get(
     headers: Optional[Dict[str, str]] = None,
     timeout=10.0,
     max_retries=0,
+    tqdm_callback: Optional[Callable[[int], None]] = None,
 ):
     """
     Download a remote file. Do not gobble up errors, and will return errors tailored to the Hugging Face Hub.
@@ -530,6 +531,7 @@ def http_get(
     for chunk in r.iter_content(chunk_size=10 * 1024 * 1024):
         if chunk:  # filter out keep-alive new chunks
             progress.update(len(chunk))
+            tqdm_callback(progress)
             temp_file.write(chunk)
     progress.close()
 
@@ -550,6 +552,7 @@ def cached_download(
     token: Union[bool, str, None] = None,
     local_files_only: bool = False,
     legacy_cache_layout: bool = False,
+    tqdm_callback: Optional[Callable[[int], None]] = None,
 ) -> Optional[str]:  # pragma: no cover
     """
     Download from a given URL and cache it if it's not already present in the
@@ -598,6 +601,9 @@ def cached_download(
             the old cache layout. Putting this to `True` manually will not raise
             any warning when using `cached_download`. We recommend using
             `hf_hub_download` to take advantage of the new cache.
+        tqdm_callback (`Callable`, *optional*):
+            A callback function that takes two arguments: the total number of
+            bytes to download and the number of bytes downloaded so far.
 
     Returns:
         Local path (string) of file or if networking is off, last version of
@@ -781,6 +787,7 @@ def cached_download(
                 proxies=proxies,
                 resume_size=resume_size,
                 headers=headers,
+                tqdm_callback=tqdm_callback,
             )
 
         logger.info("storing %s in cache at %s", url, cache_path)
@@ -914,6 +921,7 @@ def hf_hub_download(
     token: Union[bool, str, None] = None,
     local_files_only: bool = False,
     legacy_cache_layout: bool = False,
+    tqdm_callback: Optional[Callable] = None,
 ):
     """Download a given file if it's not already present in the local cache.
 
@@ -989,6 +997,8 @@ def hf_hub_download(
             If `True`, uses the legacy file cache layout i.e. just call [`hf_hub_url`]
             then `cached_download`. This is deprecated as the new cache layout is
             more powerful.
+        tqdm_callback (`Callable`, *optional*):
+            A callback function to be called with the `tqdm` progress bar
 
     Returns:
         Local path (string) of file or if networking is off, last version of
@@ -1279,6 +1289,7 @@ def hf_hub_download(
                 proxies=proxies,
                 resume_size=resume_size,
                 headers=headers,
+                tqdm_callback=tqdm_callback,
             )
 
         logger.info("storing %s in cache at %s", url, blob_path)
