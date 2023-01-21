@@ -467,7 +467,7 @@ def http_get(
     headers: Optional[Dict[str, str]] = None,
     timeout=10.0,
     max_retries=0,
-    tqdm_callback: Optional[Callable[[int], None]] = None,
+    tqdm_callback=None,
 ):
     """
     Download a remote file. Do not gobble up errors, and will return errors tailored to the Hugging Face Hub.
@@ -552,7 +552,7 @@ def cached_download(
     token: Union[bool, str, None] = None,
     local_files_only: bool = False,
     legacy_cache_layout: bool = False,
-    tqdm_callback: Optional[Callable[[int], None]] = None,
+    tqdm_callback=None,
 ) -> Optional[str]:  # pragma: no cover
     """
     Download from a given URL and cache it if it's not already present in the
@@ -921,7 +921,7 @@ def hf_hub_download(
     token: Union[bool, str, None] = None,
     local_files_only: bool = False,
     legacy_cache_layout: bool = False,
-    tqdm_callback: Optional[Callable] = None,
+    tqdm_callback=None,
 ):
     """Download a given file if it's not already present in the local cache.
 
