@@ -531,7 +531,8 @@ def http_get(
     for chunk in r.iter_content(chunk_size=10 * 1024 * 1024):
         if chunk:  # filter out keep-alive new chunks
             progress.update(len(chunk))
-            tqdm_callback(progress)
+            if tqdm_callback:
+                tqdm_callback(progress)
             temp_file.write(chunk)
     progress.close()
 
